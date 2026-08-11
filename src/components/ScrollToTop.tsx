@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
 export default function ScrollToTop() {
   const [visible, setVisible] = useState(false);
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   const navType = useNavigationType();
+  const scrollPositions = useRef<Record<string, number>>({});
 
   // 滚动到顶部按钮：滚动超过 300px 显示
   useEffect(() => {
@@ -14,12 +15,29 @@ export default function ScrollToTop() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 路由切换时：仅前进导航(PUSH)滚动到顶部，后退/前进(POP)保持原位置
+  // 路由切换时处理滚动
   useEffect(() => {
+    // 如果 URL 带 hash（如 /#news），滚动到对应元素
+    if (hash) {
+      const targetId = hash.replace("#", "");
+      // 延迟等待页面渲染完成
+      const timer = setTimeout(() => {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          // 元素不存在，滚到顶部
+          window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+
+    // 无 hash：PUSH 滚到顶部，POP 保持原位置
     if (navType === "PUSH") {
       window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     }
-  }, [pathname, navType]);
+  }, [pathname, hash, navType]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
