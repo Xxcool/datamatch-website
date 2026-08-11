@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigationType } from "react-router-dom";
 
 export default function ScrollToTop() {
   const [visible, setVisible] = useState(false);
   const { pathname } = useLocation();
+  const navType = useNavigationType();
 
   // 滚动到顶部按钮：滚动超过 300px 显示
   useEffect(() => {
@@ -13,10 +14,12 @@ export default function ScrollToTop() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 路由切换时自动滚动到顶部
+  // 路由切换时：仅前进导航(PUSH)滚动到顶部，后退/前进(POP)保持原位置
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-  }, [pathname]);
+    if (navType === "PUSH") {
+      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    }
+  }, [pathname, navType]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });

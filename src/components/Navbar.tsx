@@ -1,20 +1,21 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const navItems = [
-  { label: "首页", href: "/#home" },
-  { label: "使命", href: "/#mission" },
-  { label: "服务", href: "/#services" },
-  { label: "解决方案", href: "/#solutions" },
-  { label: "行业", href: "/#industries" },
-  { label: "最新消息", href: "/#news" },
-  { label: "联系我们", href: "/#contact" },
+  { label: "首页", href: "#home" },
+  { label: "使命", href: "#mission" },
+  { label: "服务", href: "#services" },
+  { label: "解决方案", href: "#solutions" },
+  { label: "行业", href: "#industries" },
+  { label: "最新消息", href: "#news" },
+  { label: "联系我们", href: "#contact" },
 ];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const isHome = location.pathname === "/";
 
   useEffect(() => {
@@ -22,6 +23,30 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Handle hash navigation: scroll to the target section
+  const handleNavClick = useCallback(
+    (e: React.MouseEvent, href: string) => {
+      e.preventDefault();
+      const targetId = href.replace("#", "");
+
+      const scrollToTarget = () => {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      };
+
+      if (!isHome) {
+        navigate("/");
+        setTimeout(scrollToTarget, 150);
+      } else {
+        scrollToTarget();
+      }
+      setMobileOpen(false);
+    },
+    [isHome, navigate]
+  );
 
   // On non-home pages, always show solid background
   const navBg = !isHome || scrolled
@@ -37,23 +62,28 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-1 lg:flex">
           {navItems.map((item) => (
-            <Link
+            <a
               key={item.href}
-              to={item.href}
-              className="rounded-lg px-3.5 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-brand-50 hover:text-brand-700"
+              href={item.href}
+              onClick={(e) => handleNavClick(e, item.href)}
+              className="cursor-pointer rounded-lg px-3.5 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-brand-50 hover:text-brand-700"
             >
               {item.label}
-            </Link>
+            </a>
           ))}
         </div>
 
         <div className="hidden lg:block">
-          <Link to="/#contact" className="btn-primary !py-2.5 !text-sm">
+          <a
+            href="#contact"
+            onClick={(e) => handleNavClick(e, "#contact")}
+            className="btn-primary !py-2.5 !text-sm"
+          >
             免费咨询
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
               <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </Link>
+          </a>
         </div>
 
         <button
@@ -77,18 +107,22 @@ export default function Navbar() {
         <div className="border-t border-gray-100 bg-white lg:hidden">
           <div className="container-x space-y-1 py-4">
             {navItems.map((item) => (
-              <Link
+              <a
                 key={item.href}
-                to={item.href}
-                className="block rounded-lg px-4 py-3 text-sm font-medium text-gray-700 hover:bg-brand-50 hover:text-brand-700"
-                onClick={() => setMobileOpen(false)}
+                href={item.href}
+                onClick={(e) => handleNavClick(e, item.href)}
+                className="block cursor-pointer rounded-lg px-4 py-3 text-sm font-medium text-gray-700 hover:bg-brand-50 hover:text-brand-700"
               >
                 {item.label}
-              </Link>
+              </a>
             ))}
-            <Link to="/#contact" className="btn-primary mt-2 w-full" onClick={() => setMobileOpen(false)}>
+            <a
+              href="#contact"
+              onClick={(e) => handleNavClick(e, "#contact")}
+              className="btn-primary mt-2 block w-full text-center"
+            >
               免费咨询
-            </Link>
+            </a>
           </div>
         </div>
       )}
